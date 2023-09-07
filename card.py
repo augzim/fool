@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import TypeVar
 
-from fool.mixins import CardGameMixin
+from mixins import CardGameMixin
 
 
 # TODO: maybe it's better to set trump to None initially?
