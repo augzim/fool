@@ -2,7 +2,7 @@ from __future__ import annotations
 import re
 
 from card import Card
-from drawable import Table
+from drawable import Deck, Table
 
 
 class Player:
@@ -51,7 +51,7 @@ class Player:
         return f'{self.name} [{", ".join(str(card) for card in self.hand)}]'
 
     # TODO: fix signature, define ABC Drawable instead of from_: Deck | Table,
-    def take_cards(self, from_, num: int, /) -> None:
+    def take_cards(self, from_: Deck | Table, /, num: int) -> None:
         """Take specified number of cards from a deck or all cards from table"""
         # Deck and Table classes have draw method for this purpose
         self.hand += from_.draw(num)
