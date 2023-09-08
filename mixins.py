@@ -1,7 +1,7 @@
 """Define mixin classes, which provides accessory objects to card games-related classes"""
 
 
-import re
+from config import CONFIG
 
 
 class CardGameMixin:
@@ -29,9 +29,4 @@ MIXINS = {
     '52': CardGameMixin52,
 }
 
-# read deck size from config file and choose appropriate mixin class
-with open('settings.cfg') as config:
-    for line in config:
-        if re.match('DECK_SIZE', line):
-            deck_size = line.strip().split('=')[1]
-            CardGameMixin = MIXINS[deck_size]
+CardGameMixin = MIXINS[CONFIG['DECK_SIZE']]
