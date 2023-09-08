@@ -8,4 +8,4 @@ with open('settings.cfg') as config:
     for line in config:
         if '=' in line:
             key, value = line.strip().split('=')
-            CONFIG[key] = value
+            CONFIG[key] = int(value) if value.isdigit() else value

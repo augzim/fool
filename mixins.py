@@ -25,8 +25,8 @@ class CardGameMixin52(CardGameMixin):
 
 
 MIXINS = {
-    '36': CardGameMixin36,
-    '52': CardGameMixin52,
+    36: CardGameMixin36,
+    52: CardGameMixin52,
 }
 
 CardGameMixin = MIXINS[CONFIG['DECK_SIZE']]
