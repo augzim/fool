@@ -84,7 +84,7 @@ class Table:
         self.trash += self.cards
         self._cleanup()
 
-    def draw(self) -> list[Card]:
+    def draw(self, *args) -> list[Card]:
         """Take all cards from table"""
         cards = self.cards.copy()
         self._cleanup()
