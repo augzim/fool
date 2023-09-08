@@ -1,5 +1,5 @@
-"""Provide a configuration settings for an entire game with a CONFIG dict.
-Settings should be specified in the settings.py file in the project's root directory."""
+"""Provide a configuration settings for an entire game with a CONFIG dict."""
+
 
 # TODO: make it using configparser module
 with open('settings.cfg') as config:
