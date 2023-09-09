@@ -61,7 +61,7 @@ class Player:
         # sort cards in hand every time a player takes cards
         # TODO: add some sorting
 
-    def attack(self, table: Table) -> Card | None:
+    def attack(self, table: Table, defender: Player) -> Card | None:
         """
         Card should be sent by a player in a format 'VS', where V - value and S - suit.
 
@@ -84,7 +84,7 @@ class Player:
         while self:
             # ask player to choose a card
             # TODO: add addressing to player for each message! Make them more personal!
-            user_input = input('Choose a card in your hand to attack: ').strip().upper()
+            user_input = input(f'{self.name}, choose a card to attack {defender.name}: ').strip().upper()
 
             # player does not want to or have no suitable card to attack
             if user_input == 'PASS':
@@ -115,7 +115,7 @@ class Player:
 
         while True:
             # ask player to choose a card
-            user_input = input('Choose a card in your hand to defend: ').strip().upper()
+            user_input = input(f'{self.name}, choose a card to defend: ').strip().upper()
 
             # player does not want to or have no suitable card to defend
             if user_input == 'PASS':
@@ -137,8 +137,8 @@ class Player:
     def throw_cards(self, table: Table, max_cards_num: int) -> None:
         """Throw additional cards to defender who lost the round. Only card of
         the same values as cards on the table can be thrown to the defender."""
-        print(f'{self.name}, you can throw at most {max_cards_num} cards if you want. '
-              f'If you do not want to throw cards to the defender, send \'PASS\'')
+        print(f'{self.name}, you can throw at most {max_cards_num} cards if '
+              f'you want. If you do not want to throw cards, send \'PASS\'.')
 
         while self:
             cards = []
@@ -146,6 +146,7 @@ class Player:
             user_input = input(f'Please enter at most {max_cards_num} cards, separated by spaces: ').strip().upper()
 
             if user_input == 'PASS':
+                # TODO: correct message to attack -> to throw
                 print(f'{self.name} does not want to or have suitable cards to attack.')
                 break
             else:
@@ -165,7 +166,8 @@ class Player:
                             break
 
                     # valid user input (all specified cards were found in attacker's (player's) hand)
-                    print(f'{self.name} has thrown {len(cards)} cards: {", ".join(str(card) for card in cards)}.')
+                    print(f'{self.name} has thrown {len(cards)} cards: '
+                          f'{", ".join(str(card) for card in cards)}.')
                     for player_card in cards:
                         self.hand.remove(player_card)
                         table.add_card(player_card)
