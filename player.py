@@ -6,6 +6,9 @@ from drawable import Deck, Table
 
 
 # TODO: check and fix all doc-strings
+# TODO: if user type ^D -> raises EOFError: EOF when reading a line. Handle this case!
+# TODO: fix bug: if attacker finishes and defender lost, defender attacks in the next round, but he should not!
+# Player after defender should attack instead!
 
 
 class Player:
@@ -168,6 +171,9 @@ class Player:
                     # valid user input (all specified cards were found in attacker's (player's) hand)
                     print(f'{self.name} has thrown {len(cards)} cards: '
                           f'{", ".join(str(card) for card in cards)}.')
+
                     for player_card in cards:
                         self.hand.remove(player_card)
                         table.add_card(player_card)
+
+                    break
