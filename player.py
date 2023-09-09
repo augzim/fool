@@ -5,6 +5,9 @@ from card import Card
 from drawable import Deck, Table
 
 
+# TODO: check and fix all doc-strings
+
+
 class Player:
     RE_NAME = re.compile(r'\w{3,20}')
 
@@ -80,6 +83,7 @@ class Player:
         # if attacker has no cards return None
         while self:
             # ask player to choose a card
+            # TODO: add addressing to player for each message! Make them more personal!
             user_input = input('Choose a card in your hand to attack: ').strip().upper()
 
             # player does not want to or have no suitable card to attack
@@ -129,3 +133,39 @@ class Player:
                 print('Specified card not found. Try again.\n')
 
         return defend_card
+
+    def throw_cards(self, table: Table, max_cards_num: int) -> None:
+        """Throw additional cards to defender who lost the round. Only card of
+        the same values as cards on the table can be thrown to the defender."""
+        print(f'{self.name}, you can throw at most {max_cards_num} cards if you want. '
+              f'If you do not want to throw cards to the defender, send \'PASS\'')
+
+        while self:
+            cards = []
+            # player should specify all cards at once
+            user_input = input(f'Please enter at most {max_cards_num} cards, separated by spaces: ').strip().upper()
+
+            if user_input == 'PASS':
+                print(f'{self.name} does not want to or have suitable cards to attack.')
+                break
+            else:
+                user_cards = user_input.split()
+                if len(user_cards) > max_cards_num:
+                    print(f'Number of cards thrown cannot exceed {max_cards_num}. Try again.')
+                    continue
+                # proper number of cards
+                else:
+                    for card in user_cards:
+                        player_card = self.find_card(card)
+
+                        if player_card:
+                            cards.append(player_card)
+                        else:
+                            print(f'Specified cards not found. Try again.')
+                            break
+
+                    # valid user input (all specified cards were found in attacker's (player's) hand)
+                    print(f'{self.name} has thrown {len(cards)} cards: {", ".join(str(card) for card in cards)}.')
+                    for player_card in cards:
+                        self.hand.remove(player_card)
+                        table.add_card(player_card)
