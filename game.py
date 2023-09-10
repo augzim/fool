@@ -183,30 +183,35 @@ class FoolCardGame:
         self._skip_turn = False
         self.round += 1
         attack_num = 0
-        attacker, defender = self.players[0], self.players[1]
+        attackers = [self.players[i] for i in range(self.PLAYERS_NUM) if i != 1]
+        defender = self.players[1]
         # number of attack cannot exceed an initial number of cards in defender's hand
         max_attacks = min(self.MAX_ATTACKS, len(defender))
+        continue_round: bool = True
 
-        # TODO: add functionality
-        while attack_num < max_attacks:
-            attack_card = attacker.attack(self.table, defender)
+        for attacker in attackers:
+            while continue_round and attack_num < max_attacks:
+                attack_card = attacker.attack(self.table, defender)
 
-            if attack_card:
-                self.table.add_card(attack_card)
-                attack_num += 1
-                defend_card = defender.defend(attack_card)
+                if attack_card:
+                    self.table.add_card(attack_card)
+                    attack_num += 1
+                    defend_card = defender.defend(attack_card)
 
-                if defend_card:
-                    self.table.add_card(defend_card)
-                # defender cannot defend
+                    if defend_card:
+                        self.table.add_card(defend_card)
+                    # defender cannot defend
+                    else:
+                        # TODO: fix len(self.table) make it default!
+                        defender.take_cards(self.table, len(self.table))
+                        # other players can give cards to the defender
+                        self._throw_cards(defender, attack_num, max_attacks)
+                        self._skip_turn = True
+                        continue_round = False
+                # attacker cannot attack
                 else:
-                    # TODO: fix len(self.table) make it default!
-                    defender.take_cards(self.table, len(self.table))
-                    self._skip_turn = True
-                    # other players can give cards to the defender
-                    self._throw_cards(defender, attack_num, max_attacks)
                     break
-            # attacker cannot attack
+
             else:
                 break
 
