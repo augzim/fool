@@ -231,19 +231,17 @@ class FoolCardGame:
         return self.__fool
 
     def play(self):
-        """
-        1. Attackers won (defender skips turn)
-        2. Defender won
-        3. Any player has no cards (deck is empty)
-        4. A player disconnected
-        :return:
-        """
-        # play until at most one player has cards if it is a draw then no players with cards will be in the end.
         while True:
             self._play_round()
 
-            if len(self.players) == 1:
-                self.__fool = self.players[0]
+            # TODO: match/case
+            players_left = len(self.players)
+
+            if players_left < 2:
+                if players_left == 1:
+                    self.__fool = self.players[0]
                 break
 
-        print(f'Game is over, {self.fool.name} is a fool!')
+        print(f'Game is over, {self.fool.name} is a fool!'
+              if self.fool else
+              'Congratulations! Nobody is a fool!')
