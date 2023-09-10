@@ -181,7 +181,7 @@ class FoolCardGame:
         self._skip_turn = False
         self.round += 1
         attack_num = 0
-        attackers = [self.players[i] for i in range(self.PLAYERS_NUM) if i != 1]
+        attackers = [p for p in self.players if self.players.index(p) != 1]
         defender = self.players[1]
         # number of attack cannot exceed an initial number of cards in defender's hand
         max_attacks = min(self.MAX_ATTACKS, len(defender))
