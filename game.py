@@ -81,12 +81,14 @@ class FoolCardGame:
         """The first attacker is a player who will start the first attack in an entire
         game. Will be determined based on the smallest trump card among all players. if
         None of players have trump cards, then the first attacker will be set randomly."""
+
         first_attacker: Player | None = None
         smallest_trump: Card | None = None
 
         for player in self.players:
             for card in player.hand:
-                if card.trump and ((smallest_trump is None) or (card < smallest_trump)):
+                if card.trump and ((smallest_trump is None)
+                                   or (card < smallest_trump)):
                     smallest_trump = card
                     first_attacker = player
 
@@ -119,6 +121,7 @@ class FoolCardGame:
         less than max_attacks cards, other players (attackers) can give more cards to
         defender. THROW PHASE is finished when either: 1) card limit is reached or 2)
         attackers do not want to or have no cards to continue."""
+
         print(f'THROW PHASE: ALL PLAYERS CAN GIVE ADDITIONAL CARDS TO THE DEFENDER {defender.name}.')
         players_num = len(self.players)
         attackers = [self.players[i] for i in range(players_num) if i != 1]
@@ -215,10 +218,10 @@ class FoolCardGame:
         self.table.clear()
         # players take cards from the deck to have required number of cards
         self._take_cards()
-        # only leave players who have cards
-        self._remove_watchers()
         # rearrange players for the next round
         self._reassign_roles()
+        # only leave players who have cards
+        self._remove_watchers()
 
     @property
     def fool(self):
