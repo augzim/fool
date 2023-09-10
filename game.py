@@ -114,7 +114,7 @@ class FoolCardGame:
 """
         print(instructions)
 
-    def _throw_cards(self, defender: Player, attack_num: int, max_attacks: int) -> None:
+    def _throw_cards(self, attackers: list[Player], defender: Player, attack_num: int, max_attacks: int) -> None:
         """If defender lost the round (end of a round), all other players can give
         him more cards, with values same as values of cards on the table (THROW PHASE).
         if the first attacker (in the round) cannot give more cards and defender took
@@ -123,8 +123,6 @@ class FoolCardGame:
         attackers do not want to or have no cards to continue."""
 
         print(f'THROW PHASE: ALL PLAYERS CAN GIVE ADDITIONAL CARDS TO THE DEFENDER {defender.name}.')
-        players_num = len(self.players)
-        attackers = [self.players[i] for i in range(players_num) if i != 1]
 
         for attacker in attackers:
             if attack_num < max_attacks:
@@ -205,7 +203,7 @@ class FoolCardGame:
                         # TODO: fix len(self.table) make it default!
                         defender.take_cards(self.table, len(self.table))
                         # other players can give cards to the defender
-                        self._throw_cards(defender, attack_num, max_attacks)
+                        self._throw_cards(attackers, defender, attack_num, max_attacks)
                         self._skip_turn = True
                         continue_round = False
                 # attacker cannot attack
