@@ -7,8 +7,6 @@ from drawable import Deck, Table
 
 # TODO: check and fix all doc-strings
 # TODO: if user type ^D -> raises EOFError: EOF when reading a line. Handle this case!
-# TODO: fix bug: if attacker finishes and defender lost, defender attacks in the next round, but he should not!
-# Player after defender should attack instead!
 
 
 class Player:
@@ -116,6 +114,7 @@ class Player:
         """Choose Defend from an attack card"""
         defend_card = None
 
+        # TODO: change True for self for consistency (with attack and throw)
         while True:
             # ask player to choose a card
             user_input = input(f'{self.name}, choose a card to defend: ').strip().upper()
@@ -140,22 +139,25 @@ class Player:
     def throw_cards(self, table: Table, max_cards_num: int) -> None:
         """Throw additional cards to defender who lost the round. Only card of
         the same values as cards on the table can be thrown to the defender."""
+
         print(f'{self.name}, you can throw at most {max_cards_num} cards if '
               f'you want. If you do not want to throw cards, send \'PASS\'.')
 
         while self:
             cards = []
             # player should specify all cards at once
-            user_input = input(f'Please enter at most {max_cards_num} cards, separated by spaces: ').strip().upper()
+            user_input = input(f'Please enter at most {max_cards_num} cards,'
+                               f' separated by spaces: ').strip().upper()
 
             if user_input == 'PASS':
-                # TODO: correct message to attack -> to throw
-                print(f'{self.name} does not want to or have suitable cards to attack.')
+                print(f'{self.name} does not want to or have no suitable cards to throw.')
                 break
             else:
                 user_cards = user_input.split()
+
                 if len(user_cards) > max_cards_num:
                     print(f'Number of cards thrown cannot exceed {max_cards_num}. Try again.')
+                elif not user_cards:
                     continue
                 # proper number of cards
                 else:
@@ -167,13 +169,13 @@ class Player:
                         else:
                             print(f'Specified cards not found. Try again.')
                             break
+                    # valid user input (all cards found in player's hand)
+                    else:
+                        print(f'{self.name} has thrown {len(cards)} cards: '
+                              f'{", ".join(str(card) for card in cards)}.')
 
-                    # valid user input (all specified cards were found in attacker's (player's) hand)
-                    print(f'{self.name} has thrown {len(cards)} cards: '
-                          f'{", ".join(str(card) for card in cards)}.')
-
-                    for player_card in cards:
-                        self.hand.remove(player_card)
-                        table.add_card(player_card)
-
-                    break
+                        for player_card in cards:
+                            self.hand.remove(player_card)
+                            table.add_card(player_card)
+                        # only one correct input from a player is allowed
+                        break
