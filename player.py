@@ -64,7 +64,7 @@ class Player:
 
     def attack(self, table: Table, defender: Player) -> Card | None:
         """
-        Card should be sent by a player in a format 'VS', where V - value and S - suit.
+        Card should be sent by a player in a format 'RS', where R - rank and S - suit.
 
         Possible attacker's behaviour options:
         1. Attacker has no cards at all (does not ask player -> auto-reply) -> return None.
@@ -98,13 +98,13 @@ class Player:
 
             potential_card = self.find_card(user_input)
             if potential_card:
-                # either table is empty or there are cards on the table with the same value
-                if (not table.card_values) or (potential_card.value in table.card_values):
+                # either table is empty or there are cards on the table with the same rank
+                if (not table.card_ranks) or (potential_card.rank in table.card_ranks):
                     self.hand.remove(potential_card)
                     attack_card = potential_card
                     break
                 else:
-                    print('No cards of the same value on the table. Try again.\n')
+                    print('No cards of the same rank on the table. Try again.\n')
             else:
                 print('Specified card not found. Try again.\n')
 
@@ -138,7 +138,7 @@ class Player:
 
     def throw_cards(self, table: Table, max_cards_num: int) -> None:
         """Throw additional cards to defender who lost the round. Only card of
-        the same values as cards on the table can be thrown to the defender."""
+        the same ranks as cards on the table can be thrown to the defender."""
 
         print(f'{self.name}, you can throw at most {max_cards_num} cards if '
               f'you want. If you do not want to throw cards, send \'PASS\'.')

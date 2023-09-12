@@ -16,12 +16,12 @@ class CardGameMixin:
 
 class CardGameMixin36(CardGameMixin):
     """Mixin for card games based on 36-card deck"""
-    VALUES = ('6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A')
+    RANKS = ('6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A')
 
 
 class CardGameMixin52(CardGameMixin):
     """Mixin for card games based on 52-card deck"""
-    VALUES = ('2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A')
+    RANKS = ('2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A')
 
 
 MIXINS = {

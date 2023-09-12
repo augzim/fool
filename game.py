@@ -1,6 +1,4 @@
-from collections.abc import Iterable
 import random
-import re
 
 from card import Card
 from config import CONFIG
@@ -9,12 +7,15 @@ from mixins import CardGameMixin
 from player import Player
 
 
+# TODO: write a thorough game description
+
+
 class FoolCardGame:
     def __init__(self, cards_to_have: int = 6, max_attacks: int = 6) -> None:
         """
-        TODO: write a thorough game description
         TODO: also write all terminology in here.
-        :param cards_to_have: minimum number of cards players need to have in the beginning of each round.
+        :param cards_to_have: minimum number of cards players need to have in
+        the beginning of each round.
         :param max_attacks: max number of attack that defender need to endure.
         """
         # player-related block
@@ -40,7 +41,8 @@ class FoolCardGame:
         self.first_attacker = self._find_first_attacker()
         # in the beginning of each round the first attacker always has index 0, defender - 1
         first_attacker_index = self.players.index(self.first_attacker)
-        self.players = self.players[first_attacker_index:] + self.players[:first_attacker_index]
+        self.players = (self.players[first_attacker_index:] +
+                        self.players[:first_attacker_index])
 
         # other settings
         self.MAX_ATTACKS = max_attacks
@@ -55,7 +57,6 @@ class FoolCardGame:
         # TODO: think about -- self._greet_players()
         self._send_instructions()
 
-    # TODO: send to each player info about which cards he took from the deck (special case - no cards (empty deck).
     def _take_cards(self) -> None:
         """
         All players take cards from a deck to have required (CARDS_TO_HAVE)
@@ -78,9 +79,10 @@ class FoolCardGame:
                 player.take_cards(self.deck, need_cards)
 
     def _find_first_attacker(self) -> Player:
-        """The first attacker is a player who will start the first attack in an entire
-        game. Will be determined based on the smallest trump card among all players. if
-        None of players have trump cards, then the first attacker will be set randomly."""
+        """The first attacker is a player who will start the first attack
+        in an entire game. Will be determined based on the smallest trump
+        card among all players. if None of players have trump cards, then
+        the first attacker will be set randomly."""
 
         first_attacker: Player | None = None
         smallest_trump: Card | None = None
@@ -116,7 +118,7 @@ class FoolCardGame:
 
     def _throw_cards(self, attackers: list[Player], defender: Player, attack_num: int, max_attacks: int) -> None:
         """If defender lost the round (end of a round), all other players can give
-        him more cards, with values same as values of cards on the table (THROW PHASE).
+        him more cards, with ranks same as ranks of cards on the table (THROW PHASE).
         if the first attacker (in the round) cannot give more cards and defender took
         less than max_attacks cards, other players (attackers) can give more cards to
         defender. THROW PHASE is finished when either: 1) card limit is reached or 2)
@@ -200,7 +202,6 @@ class FoolCardGame:
                         self.table.add_card(defend_card)
                     # defender cannot defend
                     else:
-                        # TODO: fix len(self.table) make it default!
                         defender.take_cards(self.table, len(self.table))
                         # other players can give cards to the defender
                         self._throw_cards(attackers, defender, attack_num, max_attacks)

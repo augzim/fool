@@ -11,7 +11,7 @@ from mixins import CardGameMixin
 class Deck(CardGameMixin):
     def __init__(self, trump: str):
         self.cards = [Card(v, s, s == trump)
-                      for s, v in it.product(self.SUITS, self.VALUES)]
+                      for s, v in it.product(self.SUITS, self.RANKS)]
 
     def __repr__(self):
         cls_name = self.__class__.__name__
@@ -50,7 +50,7 @@ class Deck(CardGameMixin):
 class Table:
     def __init__(self):
         self.cards: list[Card] = []
-        self.card_values: set[str] = set()
+        self.card_ranks: set[str] = set()
         self.trash: list[Card] = []
 
     def __len__(self):
@@ -72,12 +72,12 @@ class Table:
     def add_card(self, card: Card) -> None:
         """Put a card on a table"""
         self.cards.append(card)
-        self.card_values.add(card.value)
+        self.card_ranks.add(card.ranl)
 
     def _cleanup(self):
         """Empty table from cards"""
         self.cards.clear()
-        self.card_values.clear()
+        self.card_ranks.clear()
 
     def clear(self):
         """Transfer all cards from table to trash (beaten cards)"""
