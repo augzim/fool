@@ -72,7 +72,7 @@ class Table:
     def add_card(self, card: Card) -> None:
         """Put a card on a table"""
         self.cards.append(card)
-        self.card_ranks.add(card.ranl)
+        self.card_ranks.add(card.rank)
 
     def _cleanup(self):
         """Empty table from cards"""
