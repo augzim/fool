@@ -1,3 +1,4 @@
+import math
 import random
 
 from card import Card
@@ -116,7 +117,7 @@ class FoolCardGame:
 """
         print(instructions)
 
-    def _throw_cards(self, attackers: list[Player], defender: Player, attack_num: int, max_attacks: int) -> None:
+    def _throw_cards(self, attackers: list[Player], defender: Player, max_attacks: int) -> None:
         """If defender lost the round (end of a round), all other players can give
         him more cards, with ranks same as ranks of cards on the table (THROW PHASE).
         if the first attacker (in the round) cannot give more cards and defender took
@@ -125,16 +126,15 @@ class FoolCardGame:
         attackers do not want to or have no cards to continue."""
 
         print(f'THROW PHASE: ALL PLAYERS CAN GIVE ADDITIONAL CARDS TO THE DEFENDER {defender.name}.')
+        attack_num = math.ceil(len(self.table) / 2)
 
         for attacker in attackers:
             if attack_num < max_attacks:
                 # max cards number to add to defender
                 max_cards_num = max_attacks - attack_num
-                attacker.throw_cards(self.table, max_cards_num)
-                thrown_cards_num = len(self.table)
-                # defender takes cards thrown by an attacker
-                defender.take_cards(self.table, thrown_cards_num)
-                attack_num += thrown_cards_num
+                thrown_cards = attacker.throw_cards(self.table, max_cards_num)
+                [self.table.add_card(card) for card in thrown_cards]
+                attack_num += len(thrown_cards)
             else:
                 break
 
@@ -202,9 +202,9 @@ class FoolCardGame:
                         self.table.add_card(defend_card)
                     # defender cannot defend
                     else:
-                        defender.take_cards(self.table, len(self.table))
                         # other players can give cards to the defender
-                        self._throw_cards(attackers, defender, attack_num, max_attacks)
+                        self._throw_cards(attackers, defender, max_attacks)
+                        defender.take_cards(self.table, len(self.table))
                         self._skip_turn = True
                         continue_round = False
                 # attacker cannot attack

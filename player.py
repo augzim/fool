@@ -24,6 +24,7 @@ class Player:
 
         self.greet_player()
         # player's cards
+        # TODO: store cards in a more organized way (dict)
         self.hand = []
 
     # TODO: think if transfer this method to the class Game
@@ -31,7 +32,7 @@ class Player:
         """Greet player"""
         print(f'Hi, {self.name}, have a nice game and good luck!\n')
 
-    def find_card(self, card: str) -> Card | None:
+    def find_card(self, card: Card | str) -> Card | None:
         """Try to find a specified card in a player's hand."""
         for c in self.hand:
             if c.is_identical(card):
@@ -136,34 +137,38 @@ class Player:
 
         return defend_card
 
-    def throw_cards(self, table: Table, max_cards_num: int) -> None:
+    def throw_cards(self, table: Table, max_cards_num: int) -> list[Card]:
         """Throw additional cards to defender who lost the round. Only card of
         the same ranks as cards on the table can be thrown to the defender."""
 
+        cards = []
         print(f'{self.name}, you can throw at most {max_cards_num} cards if '
               f'you want. If you do not want to throw cards, send \'PASS\'.')
 
         while self:
-            cards = []
+            # start each input from scratch
+            cards.clear()
             # player should specify all cards at once
-            user_input = input(f'Please enter at most {max_cards_num} cards,'
-                               f' separated by spaces: ').strip().upper()
+            user_input = input(f'Please enter at most {max_cards_num} cards, '
+                               f'separated by spaces: ').strip().upper()
 
             if user_input == 'PASS':
                 print(f'{self.name} does not want to or have no suitable cards to throw.')
                 break
             else:
-                user_cards = user_input.split()
+                user_input = user_input.split()
 
-                if len(user_cards) > max_cards_num:
+                if len(user_input) > max_cards_num:
                     print(f'Number of cards thrown cannot exceed {max_cards_num}. Try again.')
-                elif not user_cards:
+                # empty input
+                elif not user_input:
                     continue
                 # proper number of cards
                 else:
-                    for card in user_cards:
+                    for card in user_input:
                         player_card = self.find_card(card)
 
+                        # TODO: # if player_card and player_card.rank in table.card_ranks (another msg)
                         if player_card:
                             cards.append(player_card)
                         else:
@@ -176,6 +181,7 @@ class Player:
 
                         for player_card in cards:
                             self.hand.remove(player_card)
-                            table.add_card(player_card)
                         # only one correct input from a player is allowed
                         break
+
+        return cards
