@@ -156,7 +156,8 @@ class Player:
                 print(f'{self.name} does not want to or have no suitable cards to throw.')
                 break
             else:
-                user_input = user_input.split()
+                # remove duplicates if exist
+                user_input = set(user_input.split())
 
                 if len(user_input) > max_cards_num:
                     print(f'Number of cards thrown cannot exceed {max_cards_num}. Try again.')
