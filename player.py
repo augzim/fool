@@ -168,9 +168,12 @@ class Player:
                     for card in user_input:
                         player_card = self.find_card(card)
 
-                        # TODO: # if player_card and player_card.rank in table.card_ranks (another msg)
                         if player_card:
-                            cards.append(player_card)
+                            if player_card.rank in table.card_ranks:
+                                cards.append(player_card)
+                            else:
+                                print('No cards of the same rank on the table. Try again.\n')
+                                break
                         else:
                             print(f'Specified cards not found. Try again.')
                             break
