@@ -51,7 +51,7 @@ class TestPlayer:
             player.hand = hand
 
         actual_card = player.find_card(target_card)
-        assert actual_card.is_identical(expected_card) \
+        assert actual_card == expected_card \
             if actual_card is not None else actual_card is expected_card, \
             'Wrong card was found!'
 
@@ -122,7 +122,7 @@ class TestPlayer:
         with mock.patch('player.input', side_effect=user_input):
             attack_card = attacker.attack(table, defender)
 
-        assert attack_card.is_identical(expected_card) \
+        assert attack_card == expected_card \
             if expected_card is not None else attack_card is expected_card, \
             'Chosen a wrong card to attack!'
 
@@ -164,7 +164,7 @@ class TestPlayer:
         with mock.patch('player.input', side_effect=user_input):
             defend_card = defender.defend(attack_card)
 
-        assert defend_card.is_identical(expected_card) \
+        assert defend_card == expected_card \
             if expected_card is not None else defend_card is expected_card, \
             'Chosen a wrong card to defend!'
 
@@ -205,16 +205,11 @@ class TestPlayer:
         Check that cards were removed from player's hand.
         Check that correct cards were returned.
         """
-        def convert(s):
-            trump = 'Spades'
-            suits = {'S': 'Spades', 'C': 'Clubs', 'H': 'Hearts', 'D': 'Diamonds'}
-            rank, suit = s[:-1], suits[s[-1]]
-            return Card(rank, suit, suit == trump)
-
-        hand = [convert(card) for card in hand]
+        trump = 'Spades'
+        hand = [Card.convert(card, trump) for card in hand]
         _table = Table()
-        [_table.add_card(convert(card)) for card in table]
-        expected = [convert(card) for card in expected_cards]
+        [_table.add_card(Card.convert(card, trump)) for card in table]
+        expected = {Card.convert(card, trump) for card in expected_cards}
 
         cards_in_hand = len(hand)
 
@@ -228,7 +223,6 @@ class TestPlayer:
         correct_input = user_input[-1]
         cards_num = len(correct_input.split()) if correct_input != 'PASS' else 0
 
-        # TODO: remake assert below, when change is_identical to __eq__
-        assert all(map(lambda x, y: x.is_identical(y), thrown_cards, expected)), 'Wrong cards were thrown!'
+        assert set(thrown_cards) == expected, 'Wrong cards were thrown!'
         assert len(thrown_cards) == len(expected), 'Wrong number of thrown cards!'
         assert len(player.hand) == cards_in_hand - cards_num, 'Wrong number of cards in a player\'s hand!'

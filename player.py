@@ -35,7 +35,7 @@ class Player:
     def find_card(self, card: Card | str) -> Card | None:
         """Try to find a specified card in a player's hand."""
         for c in self.hand:
-            if c.is_identical(card):
+            if c == card:
                 return c
 
     def __len__(self):

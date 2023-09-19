@@ -25,7 +25,7 @@ class TestCard:
     ])
     def test_convert(self, s, trump, card):
         # s: string representation of a card
-        assert Card.convert(s, trump).is_identical(card), 'Wrong card conversion!'
+        assert Card.convert(s, trump) == card, 'Wrong card conversion!'
 
     def test_equal_suit(self):
         """For 2 cards with equal suits method should return True"""
@@ -42,11 +42,11 @@ class TestCard:
     @pytest.mark.parametrize(
         'card', ['AS', Card('A', 'Spades', True)]
     )
-    def test_is_identical(self, card):
+    def test___eq__(self, card):
         """Two identical cards, either in a form of a Card instance
         or in a short-string representation should be identical"""
         c = Card('A', 'Spades', True)
-        assert c.is_identical(card), f'{c!s} and {card!s} should be identical!'
+        assert c == card, f'{c!s} and {card!s} should be identical!'
 
     @pytest.mark.parametrize('smaller, greater', [
         (Card('7', 'Spades', True), Card('A', 'Spades', True)),

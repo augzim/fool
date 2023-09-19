@@ -46,12 +46,15 @@ class Card(CardGameMixin):
 
     # TODO: change name for __eq__
     # TODO: annotation str should be changed for something else
-    def is_identical(self, card: Card | str) -> bool:
+    def __eq__(self, card: Card | str) -> bool:
         """Check if the card is identical to another (specified) one"""
         try:
             return self.rank == card.rank and self.suit == card.suit
         except AttributeError:
             return f'{self.rank}{self.suit[0]}' == card
+
+    def __hash__(self):
+        return hash((self.rank, self.suit, self.trump))
 
     def __gt__(self, other: Card) -> bool:
         """
