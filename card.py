@@ -20,6 +20,15 @@ class Card(CardGameMixin):
             return input_
         raise ValueError(f'{input_} not in {possible_values}')
 
+    @classmethod
+    def convert(cls, card: str, trump: bool) -> Card:
+        """Convert string representation of a card into Card object.
+        For instance, '10S' -> Card('10', 'Spades')."""
+        # first 1 or 2 letter define card rank
+        rank = card[:-1]
+        suit,  = [suit for suit in cls.SUITS if card[-1] == suit[0]]
+        return cls(rank, suit, trump)
+
     def __repr__(self) -> str:
         return f'{self.__class__.__name__}{self.rank, self.suit, self.trump}'
 
@@ -35,7 +44,9 @@ class Card(CardGameMixin):
         """Compares two cards ranks"""
         return self.rank == card.rank
 
-    def is_identical(self, card: Card | str):
+    # TODO: change name for __eq__
+    # TODO: annotation str should be changed for something else
+    def is_identical(self, card: Card | str) -> bool:
         """Check if the card is identical to another (specified) one"""
         try:
             return self.rank == card.rank and self.suit == card.suit
