@@ -21,13 +21,13 @@ class Card(CardGameMixin):
         raise ValueError(f'{input_} not in {possible_values}')
 
     @classmethod
-    def convert(cls, card: str, trump: bool) -> Card:
+    def convert(cls, card: str, trump: str) -> Card:
         """Convert string representation of a card into Card object.
         For instance, '10S' -> Card('10', 'Spades')."""
         # first 1 or 2 letter define card rank
         rank = card[:-1]
         suit,  = [suit for suit in cls.SUITS if card[-1] == suit[0]]
-        return cls(rank, suit, trump)
+        return cls(rank, suit, trump.capitalize() == suit)
 
     def __repr__(self) -> str:
         return f'{self.__class__.__name__}{self.rank, self.suit, self.trump}'

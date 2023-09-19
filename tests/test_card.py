@@ -19,9 +19,9 @@ class TestCard:
             f'Initializing Card instance with a {rank} should raise a ValueError!'
 
     @pytest.mark.parametrize('s, trump, card', [
-        ('JS', False, Card('J', 'Spades', False)),
-        ('9H', False, Card('9', 'Hearts', False)),
-        ('AD', True, Card('A', 'Diamonds', True)),
+        ('JS', 'Hearts', Card('J', 'Spades', False)),
+        ('9H', 'Spades', Card('9', 'Hearts', False)),
+        ('AD', 'Diamonds', Card('A', 'Diamonds', True)),
     ])
     def test_convert(self, s, trump, card):
         # s: string representation of a card
