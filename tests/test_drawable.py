@@ -23,17 +23,17 @@ class TestDeck:
         expected_num = CONFIG['DECK_SIZE'] if cards_num > deck_length else cards_num
 
         assert len(taken_cards) == expected_num, 'Wrong number of cards taken!'
-        assert (len(deck) == deck_length - expected_num
-                if cards_num <= CONFIG['DECK_SIZE'] else 0,
-                'Wrong number of cards left in the deck!')
+        assert len(deck) == (
+            deck_length - expected_num if cards_num <= CONFIG['DECK_SIZE'] else 0
+        ), 'Wrong number of cards left in the deck!'
 
 
 class TestTable:
     def test_add_card(self, card):
         table = Table()
         table.add_card(card)
-        assert (table.card_ranks == {card.rank} and table.cards == [card],
-                'A card was put on the table improperly!')
+        assert table.card_ranks == {card.rank} and table.cards == [card], \
+            'A card was put on the table improperly!'
 
     def test__cleanup(self, table_and_card):
         table, _ = table_and_card

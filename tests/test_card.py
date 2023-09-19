@@ -7,7 +7,8 @@ class TestCard:
     def test___init__(self):
         """Correct args -> correct Card instance"""
         card = Card('A', 'Spades', True)
-        assert card.__dict__ == {'rank': 'A', 'suit': 'Spades', 'trump': True}, 'Wrong card creation!'
+        assert card.__dict__ == {'rank': 'A', 'suit': 'Spades', 'trump': True}, \
+            'Wrong card creation!'
 
     def test___init_fail(self):
         """Incorrect args, either rank or suit -> ValueError"""
