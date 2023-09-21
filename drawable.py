@@ -31,10 +31,8 @@ class Deck(CardGameMixin):
         """Show number of cards left in a deck"""
         return len(self.cards)
 
-    # TODO: add return annotation -> list[Card]
-    def draw(self, n: int):
+    def draw(self, n: int) -> list[Card]:
         """Remove and return 'n' cards from the top of a deck"""
-        # arguable check, maybe will be removed in the future
         if n < 0:
             raise ValueError('Number of cards must be positive!')
         taken, self.cards = self.cards[:n], self.cards[n:]
@@ -75,7 +73,7 @@ class Table:
         self.card_ranks.add(card.rank)
 
     def _cleanup(self):
-        """Empty table from cards"""
+        """Clear cards from a table"""
         self.cards.clear()
         self.card_ranks.clear()
 

@@ -8,15 +8,11 @@ from mixins import CardGameMixin
 from player import Player
 
 
-# TODO: write a thorough game description
-
-
 class FoolCardGame:
     def __init__(self, cards_to_have: int = 6, max_attacks: int = 6) -> None:
         """
-        TODO: also write all terminology in here.
         :param cards_to_have: minimum number of cards players need to have in
-        the beginning of each round.
+        the beginning of each round (if there are cards in a deck still).
         :param max_attacks: max number of attack that defender need to endure.
         """
         # player-related block
@@ -39,9 +35,9 @@ class FoolCardGame:
         self._take_cards()
 
         # TODO: remove rearrangement -> change roles with index
-        self.first_attacker = self._find_first_attacker()
-        # in the beginning of each round the first attacker always has index 0, defender - 1
-        first_attacker_index = self.players.index(self.first_attacker)
+        self._first_attacker = self._find_first_attacker()
+        # a player with index 0 is the first attacker in a round
+        first_attacker_index = self.players.index(self._first_attacker)
         self.players = (self.players[first_attacker_index:] +
                         self.players[:first_attacker_index])
 
@@ -61,23 +57,22 @@ class FoolCardGame:
     def _take_cards(self) -> None:
         """
         All players take cards from a deck to have required (CARDS_TO_HAVE)
-        number of cards. The attacker (a player who started the round with
-        an attack) is the first player who takes cards, the defender is the
-        last one. For instance, players are sitting around a circle table in
-        the following order (from left to right): A (attacker) -> D (defender)
-        -> P3 (player3) -> P4 (player4). Then players take cards in the following
-        manner: A -> P3 -> P4 -> D. Attacker is a player who always has an index
-        equals to 0 in the self.players list, while defender always has an index
-        equals to 1 (A -> D -> P3 -> P4[ -> ... -> P6]).
+        number of cards.
+
+        The first attacker (a player who starts a round with an attack) is
+        the first player who takes cards, the defender is the last one.
         """
+
         players_num = len(self.players)
-        # round should not start if players_num < 2,
-        # thus it's guaranteed that no IndexError occur
+        # Round should not start if players_num < 2, thus it is guaranteed
+        # that no IndexError occur.
+        # Players with indices 0 and 1 are the first attacker and defender,
+        # respectively
         for player_index in (0, *range(2, players_num), 1):
             player = self.players[player_index]
             if len(player) < self.CARDS_TO_HAVE:
-                need_cards = self.CARDS_TO_HAVE - len(player)
-                player.take_cards(self.deck, need_cards)
+                cards_num = self.CARDS_TO_HAVE - len(player)
+                player.take_cards(self.deck, cards_num)
 
     def _find_first_attacker(self) -> Player:
         """The first attacker is a player who will start the first attack
@@ -106,31 +101,34 @@ class FoolCardGame:
         """Send instructions to all players"""
         # TODO: write complete instructions message
         instructions = """
----------------------------------------------------------------------------------------
+=======================================================================================
                                      GAME INSTRUCTIONS
----------------------------------------------------------------------------------------
+=======================================================================================
 1. ...
 2. ...
 3. ...
    ...
----------------------------------------------------------------------------------------
+=======================================================================================
 """
         print(instructions)
 
     def _throw_cards(self, attackers: list[Player], defender: Player, max_attacks: int) -> None:
-        """If defender lost the round (end of a round), all other players can give
-        him more cards, with ranks same as ranks of cards on the table (THROW PHASE).
-        if the first attacker (in the round) cannot give more cards and defender took
-        less than max_attacks cards, other players (attackers) can give more cards to
-        defender. THROW PHASE is finished when either: 1) card limit is reached or 2)
-        attackers do not want to or have no cards to continue."""
+        """If defender lost a round, all other players can give (throw) him
+        cards, with ranks same as ranks of cards on the table (THROW PHASE).
 
-        print(f'THROW PHASE: ALL PLAYERS CAN GIVE ADDITIONAL CARDS TO THE DEFENDER {defender.name}.')
+        if the first attacker in a round cannot throw more cards and defender
+        took less than max_attacks cards, other players (attackers) can give
+        cards to the defender.
+
+        THROW PHASE is finished when either: 1) a set limit is reached or 2)
+        attackers do not want to or 3) have no cards to continue."""
+
+        print(f'THROW PHASE: players can give cards to the defender {defender.name}.')
         attack_num = math.ceil(len(self.table) / 2)
 
         for attacker in attackers:
             if attack_num < max_attacks:
-                # max cards number to add to defender
+                # max cards number to throw
                 max_cards_num = max_attacks - attack_num
                 thrown_cards = attacker.throw_cards(self.table, max_cards_num)
                 [self.table.add_card(card) for card in thrown_cards]
@@ -139,11 +137,11 @@ class FoolCardGame:
                 break
 
     def _remove_watchers(self):
-        """Exclude players who finished game from 'players' list.
-        Add those players to the list of watchers. This method is
-        supposed to be called after _take_cards method to remove
-        players who still do not have cards after an attempt to
-        replenish hand."""
+        """Exclude players who finished game from players.
+
+        Add these excluded players to the list of watchers. The method removes
+        players who have no cards after an attempt to replenish hand (deck is
+        empty)."""
         players = []
 
         for player in self.players:
@@ -152,7 +150,7 @@ class FoolCardGame:
         self.players = players
 
     def _reassign_roles(self):
-        """Reorder players in the end of the round according to if defender lost it or won."""
+        """Reassign the first attacker and defender roles among players."""
         if len(self.players) > 1:
             # defender lost round
             if self._skip_turn:
@@ -164,18 +162,29 @@ class FoolCardGame:
                 self.players = self.players[1:] + self.players[:1]
 
     def _play_round(self):
-        """
-        TODO: change doc-string
+        """Play a single round of a game.
+
+        General round procedure:
+        The first attacker attack a defender with a card. The defender needs
+        to find a suitable card to defend. If the defender finds such a card,
+        the attacker can attack the defender with another (suitable) card. If
+        defender could beat all cards from the attacker, the next player in a
+        row becomes an attacker and can attack the defender with his cards. If
+        at some moment during a round, the defender cannot beat an attack card,
+        other players can throw him additional cards.
+
         End of round conditions:
-        1. Defender could not defend.
-        2. Defender has no cards to continue.
-        3. Last attacker has no cards to continue.
-        4. Attackers do not want to attack (all send pass).
-        """
-        # TODO: if debug = True
+        1. Defender could not defend. A defend card needs to be greater than
+        the attack one.
+        2. Defender has no cards to continue or the limit of cards to attack
+        the defender is reached.
+        3. The last attacker has no cards to continue.
+        4. Attackers do not want to attack (all send pass)."""
+
         print(f'A trump suit is: {self.TRUMP}.')
         print(f'Number of cards in the deck is {len(self.deck)}.')
 
+        # TODO: if debug = True
         for player in self.players:
             print(player)
 
@@ -185,7 +194,7 @@ class FoolCardGame:
         attack_num = 0
         attackers = [p for p in self.players if self.players.index(p) != 1]
         defender = self.players[1]
-        # number of attack cannot exceed an initial number of cards in defender's hand
+        # num of attack cannot exceed an initial num of cards in defender's hand
         max_attacks = min(self.MAX_ATTACKS, len(defender))
         continue_round: bool = True
 
@@ -214,9 +223,9 @@ class FoolCardGame:
             else:
                 break
 
-        print(f'Defender ({defender.name}) lost the round and won\'t attack in the next one.'
+        print(f'{defender.name} lost the round and won\'t attack in the next one.'
               if self._skip_turn else
-              f'Defender ({defender.name}) endured the attack, and will attack in the next one.')
+              f'{defender.name} has repelled an attack, and will attack in the next round.')
 
         # move beaten cards from the table to the trash
         self.table.clear()
@@ -229,9 +238,11 @@ class FoolCardGame:
 
     @property
     def fool(self):
+        """A player who lost the game."""
         return self.__fool
 
     def play(self):
+        """Play an entire game from the beginning till the end."""
         while True:
             self._play_round()
 
@@ -243,6 +254,4 @@ class FoolCardGame:
                     self.__fool = self.players[0]
                 break
 
-        print(f'Game is over, {self.fool.name} is a fool!'
-              if self.fool else
-              'Congratulations! Nobody is a fool!')
+        print(f'Game is over, {"Nobody" if self.fool is None else self.fool.name} is a fool!')

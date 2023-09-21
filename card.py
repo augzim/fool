@@ -23,9 +23,9 @@ class Card(CardGameMixin):
     @classmethod
     def convert(cls, card: str, trump: str) -> Card:
         """Convert string representation of a card into Card object.
-        For instance, '10S' -> Card('10', 'Spades')."""
-        # first 1 or 2 letter define card rank
+        '10C' -> Card('10', 'Clubs'), 'AS' -> Card('A', 'Spades')."""
         rank = card[:-1]
+        # TODO: optimize
         suit,  = [suit for suit in cls.SUITS if card[-1] == suit[0]]
         return cls(rank, suit, trump.capitalize() == suit)
 
@@ -44,7 +44,6 @@ class Card(CardGameMixin):
         """Compares two cards ranks"""
         return self.rank == card.rank
 
-    # TODO: change name for __eq__
     # TODO: annotation str should be changed for something else
     def __eq__(self, card: Card | str) -> bool:
         """Check if the card is identical to another (specified) one"""
@@ -58,12 +57,11 @@ class Card(CardGameMixin):
 
     def __gt__(self, other: Card) -> bool:
         """
-        One card can be greater than another, if only both have the same suit,
-        and a rank of the first one is greater than the rank of another.
-        If cards have different suits, then at most one card can be a trump card,
-        and if the first card is a trump, then it's gt than another, else it's not
-        greater (either because the second card is a trump or both are not trump,
-        and thus are not comparable).
+        One card is greater than another, if both cards have the same suit, and
+        the rank of the first one is greater than the rank of another. If cards
+        have different suits and the first one is a trump card, then it's greater
+        than the other, else cards cannot be compared (cards have different suits
+        and none is trump).
         """
         if self.equal_suit(other):
             return self.RANKS.index(self.rank) > other.RANKS.index(other.rank)
