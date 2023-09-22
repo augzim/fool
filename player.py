@@ -1,36 +1,67 @@
 from __future__ import annotations
 import re
+import socket
 
 from card import Card
 from drawable import Deck, Table
 
 
-# TODO: check and fix all doc-strings
 # TODO: if user type ^D -> raises EOFError: EOF when reading a line. Handle this case!
 
 
 class Player:
-    RE_NAME = re.compile(r'\w{3,20}')
+    LOW, HIGH = 3, 20
+    RE_NAME = re.compile(fr'\w{{{LOW},{HIGH}}}')
 
-    def __init__(self) -> None:
+    def __init__(self, sock: socket.socket) -> None:
+        # set player's name
+        name_msg = (
+            f'\n\n'
+            f'==========================================================================================\n'
+            f'                              WELCOME TO A \'FOOL\' CARD GAME!                            \n'
+            f'==========================================================================================\n'
+            f'                   Hi player, you are on a \'FOOL\' card game server!                     \n'
+            f'                   To join a game, you need to enter your name below.                     \n'
+            f'------------------------------------------------------------------------------------------\n'
+            f'                                    NAME CONSTRAINS:                                      \n'
+            f'1) Name must be between {self.LOW} and {self.HIGH} characters (including both ends).      \n'
+            f'2) Allowed symbols: upper/lower ascii chars (a-zA-Z), digits (0-9), underscore (_).       \n'
+            f'3) No spaces are allowed!                                                                 \n'
+            f'------------------------------------------------------------------------------------------\n'
+            f'\n'
+        )
+
+        self.sock = sock
+        self.sock.send(name_msg.encode(encoding='utf-8'))
+        ask_name_msg = b'Please enter your name: '
+
         # ask a player to send his name until a suitable name is provided
-        # TODO: no duplicate names
+        # TODO: number of attempts -> disconnect
         while True:
-            username = input('Please enter your name: ').strip()
-            # handle username
-            if self.RE_NAME.fullmatch(username):
-                self.name = username
-                break
+            self.sock.send(ask_name_msg)
 
-        self.greet_player()
+            # validate unicode
+            try:
+                # telnet adds '\r\n' at the end of each message, user also might add spaces
+                player_name = self.sock.recv(1024).decode(encoding='utf-8').strip()
+            except UnicodeDecodeError:
+                self.sock.send(b'Wrong input. An input must contain only unicode characters. '
+                               b'Try again.\n')
+                continue
+            else:
+                # TODO: log user attempts
+                pass
+
+            # validate name
+            if self.RE_NAME.fullmatch(player_name):
+                self.name = player_name
+                break
+            else:
+                self.sock.send(b'Wrong name entered. Try again.\n')
+
         # player's cards
         # TODO: store cards in a more organized way (dict)
         self.hand = []
-
-    # TODO: think if transfer this method to the class Game
-    def greet_player(self) -> None:
-        """Greet player"""
-        print(f'Hi, {self.name}, have a nice game and good luck!\n')
 
     def find_card(self, card: Card | str) -> Card | None:
         """Try to find a specified card in a player's hand"""

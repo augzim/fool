@@ -6,10 +6,11 @@ from config import CONFIG
 from drawable import Deck, Table
 from mixins import CardGameMixin
 from player import Player
+from server import Server
 
 
 class FoolCardGame:
-    def __init__(self, cards_to_have: int = 6, max_attacks: int = 6) -> None:
+    def __init__(self, server: Server, cards_to_have: int = 6, max_attacks: int = 6) -> None:
         """
         :param cards_to_have: minimum number of cards players need to have in
         the beginning of each round (if there are cards in a deck still).
@@ -17,7 +18,15 @@ class FoolCardGame:
         """
         # player-related block
         self.PLAYERS_NUM = CONFIG['PLAYERS_NUM']
-        self.players = [Player() for _ in range(self.PLAYERS_NUM)]
+        self.players: list[Player] = []
+
+        # accept expected number of players
+        while len(self.players) < self.PLAYERS_NUM:
+            player_socket, player_address = server.sock.accept()
+            player = Player(player_socket)
+            self.players.append(player)
+            self._greet_player(player)
+
         # randomize an order of players
         random.shuffle(self.players)
         # players who finished the game and waiting it finishes
@@ -35,6 +44,7 @@ class FoolCardGame:
         self._take_cards()
 
         # TODO: remove rearrangement -> change roles with index
+        # TODO: self._first_atttacker -> first_attacker
         self._first_attacker = self._find_first_attacker()
         # a player with index 0 is the first attacker in a round
         first_attacker_index = self.players.index(self._first_attacker)
@@ -50,9 +60,32 @@ class FoolCardGame:
         # a player who lost game
         self.__fool = None
 
-        # start game
-        # TODO: think about -- self._greet_players()
         self._send_instructions()
+
+    @staticmethod
+    def _greet_player(player: Player) -> None:
+        """Send a greeting message to a joined player"""
+        greeting_msg = (f'Hi {player.name}, have a nice game and good luck! '
+                        f'Game will start soon. Waiting other players.\n')
+        player.sock.send(greeting_msg.encode(encoding='utf-8'))
+
+    def _send_instructions(self):
+        """Send instructions to all players"""
+        # TODO: write complete instructions message
+        inst = (
+            """
+            ==========================================================================================
+                                                 GAME INSTRUCTIONS
+            ==========================================================================================
+            1. ...
+            2. ...
+            3. ...
+               ...
+            ==========================================================================================
+            """
+        )
+
+        [player.sock.send(inst.encode(encoding='utf-8')) for player in self.players]
 
     def _take_cards(self) -> None:
         """
@@ -60,9 +93,7 @@ class FoolCardGame:
         number of cards.
 
         The first attacker (a player who starts a round with an attack) is
-        the first player who takes cards, the defender is the last one.
-        """
-
+        the first player who takes cards, the defender is the last one."""
         players_num = len(self.players)
         # Round should not start if players_num < 2, thus it is guaranteed
         # that no IndexError occur.
@@ -95,22 +126,6 @@ class FoolCardGame:
             first_attacker = random.choice(self.players)
 
         return first_attacker
-
-    @staticmethod
-    def _send_instructions():
-        """Send instructions to all players"""
-        # TODO: write complete instructions message
-        instructions = """
-=======================================================================================
-                                     GAME INSTRUCTIONS
-=======================================================================================
-1. ...
-2. ...
-3. ...
-   ...
-=======================================================================================
-"""
-        print(instructions)
 
     def _throw_cards(self, attackers: list[Player], defender: Player, max_attacks: int) -> None:
         """If defender lost a round, all other players can give (throw) him
