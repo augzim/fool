@@ -60,32 +60,29 @@ class FoolCardGame:
         # a player who lost game
         self.__fool = None
 
-        self._send_instructions()
+        # TODO: centralize text automatically
+        self._send_all(
+            f'==========================================================================================\n'
+            f'                                        GAME RULES                                        \n'
+            f'==========================================================================================\n'
+            f'1. ...                                                                                    \n'
+            f'2. ...                                                                                    \n'
+            f'3. ...                                                                                    \n'
+            f'   ...                                                                                    \n'
+            f'------------------------------------------------------------------------------------------\n'
+        )
 
     @staticmethod
     def _greet_player(player: Player) -> None:
         """Send a greeting message to a joined player"""
         greeting_msg = (f'Hi {player.name}, have a nice game and good luck! '
-                        f'Game will start soon. Waiting other players.\n')
+                        f'Game will start soon. Waiting for other players.\n')
         player.sock.send(greeting_msg.encode(encoding='utf-8'))
 
-    def _send_instructions(self):
-        """Send instructions to all players"""
-        # TODO: write complete instructions message
-        inst = (
-            """
-            ==========================================================================================
-                                                 GAME INSTRUCTIONS
-            ==========================================================================================
-            1. ...
-            2. ...
-            3. ...
-               ...
-            ==========================================================================================
-            """
-        )
-
-        [player.sock.send(inst.encode(encoding='utf-8')) for player in self.players]
+    def _send_all(self, msg: str):
+        """Send a message to all players and watchers"""
+        # TODO: send msg to watchers as well
+        [player.sock.send(msg.encode(encoding='utf-8')) for player in self.players]
 
     def _take_cards(self) -> None:
         """
@@ -94,6 +91,7 @@ class FoolCardGame:
 
         The first attacker (a player who starts a round with an attack) is
         the first player who takes cards, the defender is the last one."""
+
         players_num = len(self.players)
         # Round should not start if players_num < 2, thus it is guaranteed
         # that no IndexError occur.
@@ -138,7 +136,11 @@ class FoolCardGame:
         THROW PHASE is finished when either: 1) a set limit is reached or 2)
         attackers do not want to or 3) have no cards to continue."""
 
-        print(f'THROW PHASE: players can give cards to the defender {defender.name}.')
+        self._send_all(
+            f'------------------------------------------------------------------------------------------\n'
+            f'                THROW PHASE: Players can give cards to {defender.name}.                   \n'
+            f'------------------------------------------------------------------------------------------\n'
+        )
         attack_num = math.ceil(len(self.table) / 2)
 
         for attacker in attackers:
@@ -146,8 +148,21 @@ class FoolCardGame:
                 # max cards number to throw
                 max_cards_num = max_attacks - attack_num
                 thrown_cards = attacker.throw_cards(self.table, max_cards_num)
-                [self.table.add_card(card) for card in thrown_cards]
-                attack_num += len(thrown_cards)
+
+                if thrown_cards:
+                    # TODO: iterate over the same list of cards twice! optimize
+                    self._send_all(
+                        f'{attacker.name} has thrown {len(thrown_cards)} card(s): '
+                        f'{", ".join(str(card) for card in thrown_cards)}.\n')
+                    [self.table.add_card(card) for card in thrown_cards]
+                    attack_num += len(thrown_cards)
+                else:
+                    # TODO: define a method in Player class abd access via method!
+                    attacker.sock.send(
+                        # TODO: same msg for att and def
+                        f'{attacker.name} does not want to or have no suitable '
+                        f'cards to throw.\n'.encode(encoding='utf-8'))
+
             else:
                 break
 
@@ -196,13 +211,6 @@ class FoolCardGame:
         3. The last attacker has no cards to continue.
         4. Attackers do not want to attack (all send pass)."""
 
-        print(f'A trump suit is: {self.TRUMP}.')
-        print(f'Number of cards in the deck is {len(self.deck)}.')
-
-        # TODO: if debug = True
-        for player in self.players:
-            print(player)
-
         # restore from the prev round
         self._skip_turn = False
         self.round += 1
@@ -213,19 +221,38 @@ class FoolCardGame:
         max_attacks = min(self.MAX_ATTACKS, len(defender))
         continue_round: bool = True
 
+        self._send_all(
+            f'------------------------------------------------------------------------------------------\n'
+            f'                                       ROUND {self.round}                                 \n'
+            f'------------------------------------------------------------------------------------------\n'
+            f'TRUMP SUIT: {self.TRUMP}.                                                                 \n'
+            f'CARDS IN THE DECK: {len(self.deck)}.                                                      \n'
+            f'PLAYERS: {", ".join(player.name for player in self.players)}.                             \n'
+            f'FIRST ATTACKER: {attackers[0]}.                                                           \n'
+            f'DEFENDER: {defender}.                                                                     \n'
+            f'------------------------------------------------------------------------------------------\n'
+        )
+
         for attacker in attackers:
             while continue_round and attack_num < max_attacks:
-                attack_card = attacker.attack(self.table, defender)
+                self._send_all(
+                    f'CURRENT ATTACKER: {attacker.name}.\n'
+                    f'CARDS ON THE TABLE: {self.table!s}.\n' if self.table else 'TABLE IS EMPTY.\n'
+                )
 
+                attack_card = attacker.attack(self.table, defender)
                 if attack_card:
                     self.table.add_card(attack_card)
                     attack_num += 1
-                    defend_card = defender.defend(attack_card)
 
+                    defend_card = defender.defend(attack_card)
                     if defend_card:
                         self.table.add_card(defend_card)
                     # defender cannot defend
                     else:
+                        # # TODO: for att and def same msg -> define var!
+                        self._send_all(f'{defender.name} does not want to '
+                                       f'or have no suitable cards to defend.')
                         # other players can give cards to the defender
                         self._throw_cards(attackers, defender, max_attacks)
                         defender.take_cards(self.table, len(self.table))
@@ -233,14 +260,18 @@ class FoolCardGame:
                         continue_round = False
                 # attacker cannot attack
                 else:
+                    self._send_all(f'{attacker.name} does not want to '
+                                   f'or have no suitable cards to attack.')
                     break
 
             else:
                 break
 
-        print(f'{defender.name} lost the round and won\'t attack in the next one.'
-              if self._skip_turn else
-              f'{defender.name} has repelled an attack, and will attack in the next round.')
+        self._send_all(
+            f'{defender.name} LOST THE ROUND AND WON\'T ATTACK IN THE NEXT ONE.\n'
+            if self._skip_turn else
+            f'{defender.name} HAS REPELLED THE ATTACK, AND WILL ATTACK IN THE NEXT ROUND.\n'
+        )
 
         # move beaten cards from the table to the trash
         self.table.clear()
@@ -269,4 +300,6 @@ class FoolCardGame:
                     self.__fool = self.players[0]
                 break
 
-        print(f'Game is over, {"Nobody" if self.fool is None else self.fool.name} is a fool!')
+        self._send_all(
+            f'GAME IS OVER, {"NOBODY" if self.fool is None else self.fool.name} IS A FOOL!\n'
+        )

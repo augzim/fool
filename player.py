@@ -47,17 +47,16 @@ class Player:
             except UnicodeDecodeError:
                 self.sock.send(b'Wrong input. An input must contain only unicode characters. '
                                b'Try again.\n')
+                # TODO: remove continue!
                 continue
             else:
                 # TODO: log user attempts
-                pass
-
-            # validate name
-            if self.RE_NAME.fullmatch(player_name):
-                self.name = player_name
-                break
-            else:
-                self.sock.send(b'Wrong name entered. Try again.\n')
+                # validate name
+                if self.RE_NAME.fullmatch(player_name):
+                    self.name = player_name
+                    break
+                else:
+                    self.sock.send(b'Wrong name entered. Try again.\n')
 
         # player's cards
         # TODO: store cards in a more organized way (dict)
@@ -118,18 +117,24 @@ class Player:
         while self:
             # ask player to choose a card
             # TODO: add addressing to player for each message! Make them more personal!
-            user_input = input(f'{self.name}, choose a card'
-                               f' to attack {defender.name}: ').strip().upper()
+            attack_msg = (
+                f'{self.name}, choose a card to attack {defender.name}.\n'
+                f'Your cards: {", ".join(str(card) for card in self.hand)}.\n'
+                f'Enter a card or send \'PASS\' (PASS is NOT allowed with an empty table): '
+            )
+            # TODO: pattern self.sock.send(msg.encode(encoding='utf-8')) occurs too ofter -> sep func!
+            self.sock.send(attack_msg.encode(encoding='utf-8'))
+            user_input = self.sock.recv(1024).decode(encoding='utf-8').strip().upper()
 
             # player does not want to or have no suitable card to attack
             if user_input == 'PASS':
                 # there are cards on the table (table is not empty)
                 if table:
-                    print(f'{self.name} does not want to or have no suitable cards to attack.')
                     break
                 # first attack in the round
                 else:
-                    print('You cannot \'PASS\' when there are no cards on the table. Try again.')
+                    self.sock.send('You cannot \'PASS\' when there are no cards on '
+                                   'the table. Try again.\n'.encode(encoding='utf-8'))
                     continue
 
             potential_card = self.find_card(user_input)
@@ -141,9 +146,11 @@ class Player:
                     attack_card = potential_card
                     break
                 else:
-                    print(f'No cards with rank {potential_card.rank} on a table. Try again.\n')
+                    self.sock.send(f'No cards with rank {potential_card.rank} on the '
+                                   f'table. Try again.\n'.encode(encoding='utf-8'))
             else:
-                print('Specified card not found. Try again.\n')
+                self.sock.send('Specified card not found. '
+                               'Try again.\n'.encode(encoding='utf-8'))
 
         return attack_card
 
@@ -169,10 +176,15 @@ class Player:
         # TODO: change True for self for consistency (with attack and throw)
         while True:
             # ask player to choose a card
-            user_input = input(f'{self.name}, choose a card to defend: ').strip().upper()
+            defend_msg = (
+                f'{self.name}, choose a card to defend from {attack_card!s}.\n'
+                f'Your cards: {", ".join(str(card) for card in self.hand)}.\n'
+                f'Enter a card or send \'PASS\': '
+            )
+            self.sock.send(defend_msg.encode(encoding='utf-8'))
+            user_input = self.sock.recv(1024).decode(encoding='utf-8').strip().upper()
 
             if user_input == 'PASS':
-                print(f'{self.name} does not want to or have no suitable cards to defend.')
                 break
 
             potential_card = self.find_card(user_input)
@@ -182,10 +194,13 @@ class Player:
                     defend_card = potential_card
                     break
                 else:
-                    print(f'Card {potential_card!s} is not greater than '
-                          f'the attack card {attack_card!s}. Try again.\n')
+                    self.sock.send(
+                        f'Card {potential_card!s} is not greater than the attack card '
+                        f'{attack_card!s}. Try again.\n'.encode(encoding='utf-8')
+                    )
             else:
-                print(f'Specified card not found. Try again.\n')
+                self.sock.send(f'Specified card not found. '
+                               f'Try again.\n'.encode(encoding='utf-8'))
 
         return defend_card
 
@@ -212,22 +227,30 @@ class Player:
             # start each input from scratch
             cards.clear()
             # player should specify all cards at once
-            user_input = input(f'Please enter at most {max_cards_num} cards to '
-                               f'throw (separated by spaces): ').strip().upper()
+            # TODO: add defender name here (to signature as well)?
+            throw_msg = (
+                f'{self.name}, choose at most {max_cards_num} cards to throw.\n'
+                f'Cards on the table: {table}.\n'
+                f'Your cards: {", ".join(str(card) for card in self.hand)}.\n'
+                f'Enter cards (separated by spaces) or send \'PASS\': '
+            )
+            self.sock.send(throw_msg.encode(encoding='utf-8'))
+            user_input = self.sock.recv(1024).decode(encoding='utf-8').strip().upper()
 
             if user_input == 'PASS':
-                print(f'{self.name} does not want to or have no suitable cards to throw.')
                 break
             else:
                 # remove duplicates if exist
                 user_input = set(user_input.split())
 
                 if len(user_input) > max_cards_num:
-                    print(f'Number of cards thrown cannot exceed {max_cards_num}. Try again.')
+                    self.sock.send(f'Number of cards thrown cannot exceed {max_cards_num}. '
+                                   f'Try again.'.encode(encoding='utf-8'))
                 # empty input
                 elif not user_input:
-                    print('Send \'PASS\' if you do not to or have '
-                          'not suitable cards to throw. Try again.')
+                    self.sock.send(
+                        'Send \'PASS\' if you do not want to or have not suitable '
+                        'cards to throw. Try again.'.encode(encoding='utf-8'))
                     continue
                 # proper number of cards
                 else:
@@ -238,17 +261,17 @@ class Player:
                             if player_card.rank in table.card_ranks:
                                 cards.append(player_card)
                             else:
-                                print(f'No cards with rank {player_card.rank} '
-                                      f'on a table. Try again.\n')
+                                self.sock.send(
+                                    f'No cards with rank {player_card.rank} on the '
+                                    f'table. Try again.\n'.encode(encoding='utf-8'))
                                 break
                         else:
-                            print(f'Specified card {player_card!s} not found. Try again.')
+                            self.sock.send(
+                                f'At least one of the specified cards not found. '
+                                f'Try again.'.encode(encoding='utf-8'))
                             break
                     # valid user input (all cards found in player's hand)
                     else:
-                        print(f'{self.name} has thrown {len(cards)} cards: '
-                              f'{", ".join(str(card) for card in cards)}.')
-
                         for player_card in cards:
                             self.hand.remove(player_card)
                         # only one correct input from a player is allowed
