@@ -14,8 +14,9 @@ class Player:
     RE_NAME = re.compile(fr'\w{{{LOW},{HIGH}}}')
 
     def __init__(self, sock: socket.socket) -> None:
+        self.sock = sock
         # set player's name
-        name_msg = (
+        self.send(
             f'\n\n'
             f'==========================================================================================\n'
             f'                              WELCOME TO A \'FOOL\' CARD GAME!                            \n'
@@ -31,22 +32,18 @@ class Player:
             f'\n'
         )
 
-        self.sock = sock
-        self.sock.send(name_msg.encode(encoding='utf-8'))
-        ask_name_msg = b'Please enter your name: '
-
         # ask a player to send his name until a suitable name is provided
         # TODO: number of attempts -> disconnect
         while True:
-            self.sock.send(ask_name_msg)
+            self.send(b'Please enter your name: ')
 
             # validate unicode
             try:
                 # telnet adds '\r\n' at the end of each message, user also might add spaces
                 player_name = self.sock.recv(1024).decode(encoding='utf-8').strip()
             except UnicodeDecodeError:
-                self.sock.send(b'Wrong input. An input must contain only unicode characters. '
-                               b'Try again.\n')
+                self.send(b'Wrong input. An input must contain '
+                          b'only unicode characters. Try again.\n')
                 # TODO: remove continue!
                 continue
             else:
@@ -56,11 +53,16 @@ class Player:
                     self.name = player_name
                     break
                 else:
-                    self.sock.send(b'Wrong name entered. Try again.\n')
+                    self.send(b'Wrong name entered. Try again.\n')
 
         # player's cards
         # TODO: store cards in a more organized way (dict)
         self.hand = []
+
+    # TODO: bytearray?
+    def send(self, msg: bytes | str, encoding: str = 'utf-8') -> None:
+        """Send a message to a player over tcp protocol"""
+        self.sock.send(msg if type(msg) is bytes else msg.encode(encoding=encoding))
 
     def find_card(self, card: Card | str) -> Card | None:
         """Try to find a specified card in a player's hand"""
@@ -117,13 +119,11 @@ class Player:
         while self:
             # ask player to choose a card
             # TODO: add addressing to player for each message! Make them more personal!
-            attack_msg = (
+            self.send(
                 f'{self.name}, choose a card to attack {defender.name}.\n'
                 f'Your cards: {", ".join(str(card) for card in self.hand)}.\n'
-                f'Enter a card or send \'PASS\' (PASS is NOT allowed with an empty table): '
+                f'Enter a card or send \'PASS\' (PASS is NOT allowed when table is empty): '
             )
-            # TODO: pattern self.sock.send(msg.encode(encoding='utf-8')) occurs too ofter -> sep func!
-            self.sock.send(attack_msg.encode(encoding='utf-8'))
             user_input = self.sock.recv(1024).decode(encoding='utf-8').strip().upper()
 
             # player does not want to or have no suitable card to attack
@@ -133,8 +133,8 @@ class Player:
                     break
                 # first attack in the round
                 else:
-                    self.sock.send('You cannot \'PASS\' when there are no cards on '
-                                   'the table. Try again.\n'.encode(encoding='utf-8'))
+                    self.send('You cannot \'PASS\' when there are '
+                              'no cards on the table. Try again.\n')
                     continue
 
             potential_card = self.find_card(user_input)
@@ -146,11 +146,10 @@ class Player:
                     attack_card = potential_card
                     break
                 else:
-                    self.sock.send(f'No cards with rank {potential_card.rank} on the '
-                                   f'table. Try again.\n'.encode(encoding='utf-8'))
+                    self.send(f'No cards with rank {potential_card.rank} '
+                              f'on the table. Try again.\n')
             else:
-                self.sock.send('Specified card not found. '
-                               'Try again.\n'.encode(encoding='utf-8'))
+                self.send('Specified card not found. Try again.\n')
 
         return attack_card
 
@@ -176,12 +175,11 @@ class Player:
         # TODO: change True for self for consistency (with attack and throw)
         while True:
             # ask player to choose a card
-            defend_msg = (
+            self.send(
                 f'{self.name}, choose a card to defend from {attack_card!s}.\n'
                 f'Your cards: {", ".join(str(card) for card in self.hand)}.\n'
                 f'Enter a card or send \'PASS\': '
             )
-            self.sock.send(defend_msg.encode(encoding='utf-8'))
             user_input = self.sock.recv(1024).decode(encoding='utf-8').strip().upper()
 
             if user_input == 'PASS':
@@ -194,13 +192,11 @@ class Player:
                     defend_card = potential_card
                     break
                 else:
-                    self.sock.send(
-                        f'Card {potential_card!s} is not greater than the attack card '
-                        f'{attack_card!s}. Try again.\n'.encode(encoding='utf-8')
-                    )
+                    self.send(
+                        f'Card {potential_card!s} is not greater than '
+                        f'the attack card {attack_card!s}. Try again.\n')
             else:
-                self.sock.send(f'Specified card not found. '
-                               f'Try again.\n'.encode(encoding='utf-8'))
+                self.send(f'Specified card not found. Try again.\n')
 
         return defend_card
 
@@ -228,13 +224,12 @@ class Player:
             cards.clear()
             # player should specify all cards at once
             # TODO: add defender name here (to signature as well)?
-            throw_msg = (
+            self.send(
                 f'{self.name}, choose at most {max_cards_num} cards to throw.\n'
                 f'Cards on the table: {table}.\n'
                 f'Your cards: {", ".join(str(card) for card in self.hand)}.\n'
                 f'Enter cards (separated by spaces) or send \'PASS\': '
             )
-            self.sock.send(throw_msg.encode(encoding='utf-8'))
             user_input = self.sock.recv(1024).decode(encoding='utf-8').strip().upper()
 
             if user_input == 'PASS':
@@ -244,13 +239,13 @@ class Player:
                 user_input = set(user_input.split())
 
                 if len(user_input) > max_cards_num:
-                    self.sock.send(f'Number of cards thrown cannot exceed {max_cards_num}. '
-                                   f'Try again.'.encode(encoding='utf-8'))
+                    self.send(f'Number of cards thrown cannot exceed '
+                              f'{max_cards_num}. Try again.')
                 # empty input
                 elif not user_input:
-                    self.sock.send(
-                        'Send \'PASS\' if you do not want to or have not suitable '
-                        'cards to throw. Try again.'.encode(encoding='utf-8'))
+                    self.send(
+                        'Send \'PASS\' if you do not want to or have '
+                        'not suitable cards to throw. Try again.')
                     continue
                 # proper number of cards
                 else:
@@ -261,14 +256,14 @@ class Player:
                             if player_card.rank in table.card_ranks:
                                 cards.append(player_card)
                             else:
-                                self.sock.send(
-                                    f'No cards with rank {player_card.rank} on the '
-                                    f'table. Try again.\n'.encode(encoding='utf-8'))
+                                self.send(
+                                    f'No cards with rank {player_card.rank} '
+                                    f'on the table. Try again.\n')
                                 break
                         else:
-                            self.sock.send(
-                                f'At least one of the specified cards not found. '
-                                f'Try again.'.encode(encoding='utf-8'))
+                            self.send(
+                                f'At least one of the specified '
+                                f'cards not found. Try again.')
                             break
                     # valid user input (all cards found in player's hand)
                     else:

@@ -75,14 +75,13 @@ class FoolCardGame:
     @staticmethod
     def _greet_player(player: Player) -> None:
         """Send a greeting message to a joined player"""
-        greeting_msg = (f'Hi {player.name}, have a nice game and good luck! '
-                        f'Game will start soon. Waiting for other players.\n')
-        player.sock.send(greeting_msg.encode(encoding='utf-8'))
+        player.send(f'Hi {player.name}, have a nice game and good luck! '
+                    f'Game will start soon. Waiting for other players.\n')
 
     def _send_all(self, msg: str):
         """Send a message to all players and watchers"""
         # TODO: send msg to watchers as well
-        [player.sock.send(msg.encode(encoding='utf-8')) for player in self.players]
+        [player.send(msg) for player in self.players]
 
     def _take_cards(self) -> None:
         """
@@ -157,11 +156,10 @@ class FoolCardGame:
                     [self.table.add_card(card) for card in thrown_cards]
                     attack_num += len(thrown_cards)
                 else:
-                    # TODO: define a method in Player class abd access via method!
-                    attacker.sock.send(
+                    attacker.send(
                         # TODO: same msg for att and def
-                        f'{attacker.name} does not want to or have no suitable '
-                        f'cards to throw.\n'.encode(encoding='utf-8'))
+                        f'{attacker.name} does not want to or '
+                        f'have no suitable cards to throw.\n')
 
             else:
                 break
