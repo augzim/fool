@@ -44,8 +44,6 @@ class Player:
             except UnicodeDecodeError:
                 self.send(b'Wrong input. An input must contain '
                           b'only unicode characters. Try again.\n')
-                # TODO: remove continue!
-                continue
             else:
                 # TODO: log user attempts
                 # validate name
@@ -246,7 +244,6 @@ class Player:
                     self.send(
                         'Send \'PASS\' if you do not want to or have '
                         'not suitable cards to throw. Try again.')
-                    continue
                 # proper number of cards
                 else:
                     for card in user_input:
