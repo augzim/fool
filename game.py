@@ -1,3 +1,4 @@
+import itertools as it
 import math
 import random
 
@@ -74,8 +75,7 @@ class FoolCardGame:
 
     def _send_all(self, msg: str):
         """Send a message to all players and watchers"""
-        # TODO: send msg to watchers as well
-        [player.send(msg) for player in self.players]
+        [player.send(msg) for player in it.chain(self.players, self.watchers)]
 
     def _take_cards(self) -> None:
         """
