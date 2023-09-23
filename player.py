@@ -138,8 +138,7 @@ class Player:
             potential_card = self.find_card(user_input)
             if potential_card:
                 # either table is empty or there are cards on the table with the same rank
-                # TODO: not table.card_ranks -> not table
-                if (not table.card_ranks) or (potential_card.rank in table.card_ranks):
+                if not table or (potential_card.rank in table.card_ranks):
                     self.hand.remove(potential_card)
                     attack_card = potential_card
                     break
