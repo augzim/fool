@@ -170,8 +170,7 @@ class Player:
 
         defend_card = None
 
-        # TODO: change True for self for consistency (with attack and throw)
-        while True:
+        while self:
             # ask player to choose a card
             self.send(
                 f'{self.name}, choose a card to defend from {attack_card!s}.\n'
