@@ -25,11 +25,12 @@ class FoolCardGame:
             player_socket, player_address = server.sock.accept()
             player = Player(player_socket)
             self.players.append(player)
-            self._greet_player(player)
+            player.send(f'Hi {player.name}, have a nice game and good luck! '
+                        f'Game will start soon. Waiting for other players.\n')
 
         # randomize an order of players
         random.shuffle(self.players)
-        # players who finished the game and waiting it finishes
+        # players who finished the game and waiting it ends
         self.watchers = []
 
         # deck-related part
@@ -44,7 +45,6 @@ class FoolCardGame:
         self._take_cards()
 
         # TODO: remove rearrangement -> change roles with index
-        # TODO: self._first_atttacker -> first_attacker
         self._first_attacker = self._find_first_attacker()
         # a player with index 0 is the first attacker in a round
         first_attacker_index = self.players.index(self._first_attacker)
@@ -71,12 +71,6 @@ class FoolCardGame:
             f'   ...                                                                                    \n'
             f'------------------------------------------------------------------------------------------\n'
         )
-
-    @staticmethod
-    def _greet_player(player: Player) -> None:
-        """Send a greeting message to a joined player"""
-        player.send(f'Hi {player.name}, have a nice game and good luck! '
-                    f'Game will start soon. Waiting for other players.\n')
 
     def _send_all(self, msg: str):
         """Send a message to all players and watchers"""
@@ -160,7 +154,6 @@ class FoolCardGame:
                         # TODO: same msg for att and def
                         f'{attacker.name} does not want to or '
                         f'have no suitable cards to throw.\n')
-
             else:
                 break
 
