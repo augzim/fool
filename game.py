@@ -216,11 +216,11 @@ class FoolCardGame:
             f'------------------------------------------------------------------------------------------\n'
             f'                                       ROUND {self.round}                                 \n'
             f'------------------------------------------------------------------------------------------\n'
-            f'TRUMP SUIT: {self.TRUMP}.                                                                 \n'
+            f'TRUMP: {self.TRUMP}.                                                                      \n'
             f'CARDS IN THE DECK: {len(self.deck)}.                                                      \n'
             f'PLAYERS: {", ".join(player.name for player in self.players)}.                             \n'
-            f'FIRST ATTACKER: {attackers[0]}.                                                           \n'
-            f'DEFENDER: {defender}.                                                                     \n'
+            f'ATTACKER: {attackers[0].name}.                                                            \n'
+            f'DEFENDER: {defender.name}.                                                                \n'
             f'------------------------------------------------------------------------------------------\n'
         )
 
